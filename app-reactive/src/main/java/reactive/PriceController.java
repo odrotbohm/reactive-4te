@@ -27,10 +27,10 @@ public class PriceController {
 
 	private final WebClient webClient;
 
-	private final SellerRepository discountRepository;
+	private final DiscountRepository discountRepository;
 
 
-	public PriceController(WebClient.Builder webClientBuilder, SellerRepository discountRepo) {
+	public PriceController(WebClient.Builder webClientBuilder, DiscountRepository discountRepo) {
 		this.webClient = webClientBuilder.baseUrl("http://localhost:8082").build();
 		this.discountRepository = discountRepo;
 	}
@@ -49,7 +49,7 @@ public class PriceController {
 							.flatMap(priceInfo ->
 									this.discountRepository
 											.getDiscount(priceInfo.getSeller(), productId)
-											.map(discount -> new ProductOffer(priceInfo, discount)));
+											.map(discount -> new ProductOffer(priceInfo, discount.value)));
 				});
 	}
 

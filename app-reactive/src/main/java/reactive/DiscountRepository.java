@@ -15,13 +15,22 @@
  */
 package reactive;
 
+import reactor.core.publisher.Mono;
 
 import java.math.BigDecimal;
 
-import reactor.core.publisher.Mono;
+import org.springframework.data.jdbc.repository.query.Query;
+import org.springframework.data.relational.core.mapping.Column;
+import org.springframework.data.repository.Repository;
 
-interface SellerRepository {
+interface DiscountRepository extends Repository<DiscountRepository.Discount, Long> {
 
-	Mono<BigDecimal> getDiscount(String seller, Long productId);
+	@Query("SELECT * FROM discounts WHERE seller = $1 AND product = $2")
+	Mono<Discount> getDiscount(String seller, Long productId);
 
+	static class Discount {
+		
+		@Column("discount")
+		public BigDecimal value;
+	}
 }

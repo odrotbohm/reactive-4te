@@ -15,27 +15,96 @@
  */
 package reactive;
 
-import java.math.BigDecimal;
-import java.math.RoundingMode;
+import io.r2dbc.postgresql.PostgresqlConnectionConfiguration;
+import io.r2dbc.postgresql.PostgresqlConnectionFactory;
+import io.r2dbc.spi.ConnectionFactory;
 
-import reactor.core.publisher.Mono;
+import java.io.IOException;
+import java.nio.file.Files;
+import java.util.stream.Stream;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.boot.CommandLineRunner;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Configuration;
+import org.springframework.core.io.ClassPathResource;
+import org.springframework.core.io.Resource;
+import org.springframework.data.r2dbc.function.DatabaseClient;
+import org.springframework.data.r2dbc.repository.support.R2dbcRepositoryFactory;
+import org.springframework.data.relational.core.mapping.RelationalMappingContext;
 
 @SpringBootApplication
 public class ReactiveApp {
-
+	
+	private static final Logger LOG = LoggerFactory.getLogger(ReactiveApp.class);
 
 	public static void main(String[] args) {
 		SpringApplication.run(ReactiveApp.class, args);
 	}
-
-
+	
 	@Bean
-	public SellerRepository sellerRepository() {
-		return (seller, productId) -> Mono.just(new BigDecimal(5).setScale(2, RoundingMode.HALF_EVEN));
+	CommandLineRunner runner(DatabaseClient client) {
+		
+		return args -> {
+			
+			Stream.of("schema.sql", "data.sql")
+					.peek(it -> LOG.info(String.format("Executing SQL from %s…", it)))
+					.map(ClassPathResource::new)
+					.flatMap(ReactiveApp::lines)
+					.peek(it -> LOG.info(String.format("Executing %s.", it)))
+					.forEach(line -> client.execute().sql(line).fetch().rowsUpdated().block());
+		};
 	}
+	
+	private static Stream<String> lines(Resource resource) {
+		
+		try {
+			return Files.lines(resource.getFile().toPath());
+		} catch (IOException o_O) {
+			throw new RuntimeException(o_O);
+		}
+	}
+	
+	@Configuration
+	static class R2dbcConfiguration {
 
+		@Bean
+		DiscountRepository customerRepository(R2dbcRepositoryFactory factory) {
+			return factory.getRepository(DiscountRepository.class);
+		}
+
+		@Bean
+		R2dbcRepositoryFactory repositoryFactory(DatabaseClient client) {
+
+			RelationalMappingContext context = new RelationalMappingContext();
+			context.afterPropertiesSet();
+
+			return new R2dbcRepositoryFactory(client, context);
+		}
+
+		@Bean
+		DatabaseClient databaseClient(ConnectionFactory factory) {
+
+			return DatabaseClient.builder() //
+					.connectionFactory(factory) //
+					.build();
+		}
+
+		@Bean
+		PostgresqlConnectionFactory connectionFactory() {
+
+			PostgresqlConnectionConfiguration config = PostgresqlConnectionConfiguration.builder() //
+					.host("localhost") //
+					.port(5432) //
+					.database("postgres") //
+					.username("postgres") //
+					.password("") //
+					.build();
+
+			return new PostgresqlConnectionFactory(config);
+		}
+	}
 }
