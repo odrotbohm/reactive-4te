@@ -21,7 +21,6 @@ import java.util.stream.Collectors;
 
 import org.springframework.boot.web.client.RestTemplateBuilder;
 import org.springframework.core.ParameterizedTypeReference;
-import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpMethod;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -32,11 +31,9 @@ import org.springframework.web.util.DefaultUriBuilderFactory;
 @RestController
 public class PriceController {
 
-	private static final ParameterizedTypeReference<List<ProductSellerInfo>> SELLER_INFO_TYPE =
+	private static final ParameterizedTypeReference<List<ProductSellerInfo>> SELLER_LIST_TYPE =
 			new ParameterizedTypeReference<List<ProductSellerInfo>>() {};
 
-	private static final ParameterizedTypeReference<List<ProductSellerInfo>> PRICE_INFO_TYPE =
-			new ParameterizedTypeReference<List<ProductSellerInfo>>() {};
 
 	private final RestTemplate restTemplate;
 
@@ -54,14 +51,18 @@ public class PriceController {
 	public List<ProductOffer> getPrice(@PathVariable Long productId) {
 
 		String sellersUrl = "/product/{productId}/sellers";
-		List<ProductSellerInfo> sellerInfos = restTemplate
-				.exchange(sellersUrl, HttpMethod.GET, new HttpEntity<>(null), SELLER_INFO_TYPE, productId)
-				.getBody();
 
-		return sellerInfos.stream()
-				.map(sellerInfo -> restTemplate.getForObject(sellerInfo.getUrl(), ProductPriceInfo.class))
+		return this.restTemplate
+				.exchange(sellersUrl, HttpMethod.GET, null, SELLER_LIST_TYPE, productId)
+				.getBody()
+				.stream()
+				.map(sellerInfo -> {
+					String priceUrl = sellerInfo.getUrl();
+					return this.restTemplate.getForObject(priceUrl, ProductPriceInfo.class);
+				})
 				.map(priceInfo -> {
-					BigDecimal discount = this.sellerRepository.getDiscount(priceInfo.getSeller(), productId);
+					String seller = priceInfo.getSeller();
+					BigDecimal discount = this.sellerRepository.getDiscount(seller, productId);
 					return new ProductOffer(discount, priceInfo);
 				})
 				.collect(Collectors.toList());

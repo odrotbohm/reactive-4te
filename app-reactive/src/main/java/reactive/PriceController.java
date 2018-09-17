@@ -16,6 +16,7 @@
 package reactive;
 
 import reactor.core.publisher.Flux;
+import reactor.core.publisher.Mono;
 
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -38,18 +39,21 @@ public class PriceController {
 
 	@GetMapping("/product/{productId}/offers")
 	public Flux<ProductOffer> getPrice(@PathVariable Long productId) {
+
 		return this.webClient.get().uri("/product/{productId}/sellers", productId)
 				.retrieve()
 				.bodyToFlux(ProductSellerInfo.class)
 				.flatMap(sellerInfo -> {
-					String sellerUrl = sellerInfo.getUrl();
-					return this.webClient.get().uri(sellerUrl)
-							.retrieve()
-							.bodyToMono(ProductPriceInfo.class)
-							.flatMap(priceInfo ->
-									this.discountRepository
-											.getDiscount(priceInfo.getSeller(), productId)
-											.map(discount -> new ProductOffer(priceInfo, discount.value)));
+
+					Mono<ProductPriceInfo> priceMono =
+							this.webClient.get().uri(sellerInfo.getUrl())
+									.retrieve().bodyToMono(ProductPriceInfo.class);
+
+					Mono<DiscountRepository.Discount> discountMono =
+							this.discountRepository.getDiscount(sellerInfo.getSeller(), productId);
+
+					return Mono.zip(priceMono, discountMono,
+							(priceInfo, discount) -> new ProductOffer(priceInfo, discount.value));
 				});
 	}
 

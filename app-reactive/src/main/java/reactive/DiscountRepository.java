@@ -28,7 +28,8 @@ interface DiscountRepository extends Repository<DiscountRepository.Discount, Lon
 	@Query("SELECT * FROM discounts WHERE seller = $1 AND product = $2")
 	Mono<Discount> getDiscount(String seller, Long productId);
 
-	static class Discount {
+
+	class Discount {
 		
 		@Column("discount")
 		public BigDecimal value;
