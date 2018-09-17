@@ -38,38 +38,29 @@ import org.springframework.data.relational.core.mapping.RelationalMappingContext
 
 @SpringBootApplication
 public class ReactiveApp {
-	
+
 	private static final Logger LOG = LoggerFactory.getLogger(ReactiveApp.class);
 
 	public static void main(String[] args) {
 		SpringApplication.run(ReactiveApp.class, args);
 	}
-	
-	@Bean
-	CommandLineRunner runner(DatabaseClient client) {
-		
-		return args -> {
-			
-			Stream.of("schema.sql", "data.sql")
-					.peek(it -> LOG.info(String.format("Executing SQL from %s…", it)))
-					.map(ClassPathResource::new)
-					.flatMap(ReactiveApp::lines)
-					.peek(it -> LOG.info(String.format("Executing %s.", it)))
-					.forEach(line -> client.execute().sql(line).fetch().rowsUpdated().block());
-		};
-	}
-	
-	private static Stream<String> lines(Resource resource) {
-		
-		try {
-			return Files.lines(resource.getFile().toPath());
-		} catch (IOException o_O) {
-			throw new RuntimeException(o_O);
-		}
-	}
-	
+
 	@Configuration
 	static class R2dbcConfiguration {
+
+		@Bean
+		CommandLineRunner runner(DatabaseClient client) {
+			
+			return args -> {
+				
+				Stream.of("schema.sql", "data.sql")
+						.peek(it -> LOG.info(String.format("Executing SQL from %s…", it)))
+						.map(ClassPathResource::new)
+						.flatMap(R2dbcConfiguration::lines)
+						.peek(it -> LOG.info(String.format("Executing %s.", it)))
+						.forEach(line -> client.execute().sql(line).fetch().rowsUpdated().block());
+			};
+		}
 
 		@Bean
 		DiscountRepository customerRepository(R2dbcRepositoryFactory factory) {
@@ -105,6 +96,15 @@ public class ReactiveApp {
 					.build();
 
 			return new PostgresqlConnectionFactory(config);
+		}
+		
+		private static Stream<String> lines(Resource resource) {
+			
+			try {
+				return Files.lines(resource.getFile().toPath());
+			} catch (IOException o_O) {
+				throw new RuntimeException(o_O);
+			}
 		}
 	}
 }
