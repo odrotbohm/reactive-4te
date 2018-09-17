@@ -8,7 +8,7 @@
 		<artifactId>reactive-4te</artifactId>
 		<version>0.0.1-SNAPSHOT</version>
 	</parent>
-	<artifactId>app-classic</artifactId>
+	<artifactId>webmvc-classic</artifactId>
 	<packaging>jar</packaging>
 	<name>Spring MVC with classic request handling (imperative-style, synchronous, blocking I/O)</name>
 

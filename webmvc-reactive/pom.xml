@@ -8,7 +8,7 @@
 		<artifactId>reactive-4te</artifactId>
 		<version>0.0.1-SNAPSHOT</version>
 	</parent>
-	<artifactId>app-reactive</artifactId>
+	<artifactId>webmvc-reactive</artifactId>
 	<packaging>jar</packaging>
 	<name>Spring MVC with Reactive Request Handling</name>
 
