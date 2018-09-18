@@ -24,9 +24,9 @@
 	</properties>
 
 	<modules>
-		<module>app-classic</module>
-		<module>app-reactive</module>
 		<module>remote-services</module>
+		<module>webmvc-classic</module>
+		<module>webmvc-reactive</module>
 	</modules>
 
 	<repositories>
