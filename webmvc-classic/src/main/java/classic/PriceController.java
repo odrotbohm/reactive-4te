@@ -36,12 +36,11 @@ public class PriceController {
 	private static final ParameterizedTypeReference<List<ProductSellerInfo>> SELLER_LIST_TYPE =
 			new ParameterizedTypeReference<List<ProductSellerInfo>>() {};
 
-	private final RestTemplate template;
+	private final RestTemplate restTemplate;
 	private final DiscountRepository repository;
 
 	public PriceController(RestTemplateBuilder builder, DiscountRepository repository) {
-		
-		this.template = builder.uriTemplateHandler(new DefaultUriBuilderFactory(BASE_URL)).build();
+		this.restTemplate = builder.uriTemplateHandler(new DefaultUriBuilderFactory(BASE_URL)).build();
 		this.repository = repository;
 	}
 
@@ -51,12 +50,12 @@ public class PriceController {
 
 		String sellersUrl = "/product/{productId}/sellers";
 
-		return template
+		return restTemplate
 				.exchange(sellersUrl, HttpMethod.GET, null, SELLER_LIST_TYPE, productId)
 				.getBody()
 				.stream()
 				.map(sellerInfo -> 
-					template.getForObject(sellerInfo.getUrl(), ProductPriceInfo.class))
+					restTemplate.getForObject(sellerInfo.getUrl(), ProductPriceInfo.class))
 				.map(priceInfo -> {
 					String seller = priceInfo.getSeller();
 					Discount discount = repository.getDiscount(seller, productId);
