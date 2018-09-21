@@ -1,0 +1,10 @@
+INSERT INTO discounts(seller, product, discount) VALUES ('seller-A', 0, 0.05);
+INSERT INTO discounts(seller, product, discount) VALUES ('seller-B', 0, 0.04);
+INSERT INTO discounts(seller, product, discount) VALUES ('seller-C', 0, 0.04);
+INSERT INTO discounts(seller, product, discount) VALUES ('seller-D', 0, 0.03);
+INSERT INTO discounts(seller, product, discount) VALUES ('seller-E', 0, 0.05);
+INSERT INTO discounts(seller, product, discount) VALUES ('seller-A', 1, 0.02);
+INSERT INTO discounts(seller, product, discount) VALUES ('seller-B', 1, 0.06);
+INSERT INTO discounts(seller, product, discount) VALUES ('seller-C', 1, 0.044);
+INSERT INTO discounts(seller, product, discount) VALUES ('seller-D', 1, 0.01);
+INSERT INTO discounts(seller, product, discount) VALUES ('seller-E', 1, 0.08);

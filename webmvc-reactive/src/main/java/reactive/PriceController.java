@@ -27,15 +27,13 @@ import org.springframework.web.reactive.function.client.WebClient;
 public class PriceController {
 
 	private final WebClient webClient;
+	private final DiscountRepository repository;
 
-	private final DiscountRepository discountRepository;
-
-
-	public PriceController(WebClient.Builder webClientBuilder, DiscountRepository discountRepo) {
+	public PriceController(WebClient.Builder webClientBuilder, DiscountRepository repository) {
+		
 		this.webClient = webClientBuilder.baseUrl("http://localhost:8082").build();
-		this.discountRepository = discountRepo;
+		this.repository = repository;
 	}
-
 
 	@GetMapping("/product/{productId}/offers")
 	public Flux<ProductOffer> getPrice(@PathVariable Long productId) {
@@ -45,12 +43,12 @@ public class PriceController {
 				.bodyToFlux(ProductSellerInfo.class)
 				.flatMap(sellerInfo -> {
 
-					Mono<ProductPriceInfo> priceMono =
-							this.webClient.get().uri(sellerInfo.getUrl())
+					Mono<ProductPriceInfo> priceMono = this.webClient.get()
+									.uri(sellerInfo.getUrl())
 									.retrieve().bodyToMono(ProductPriceInfo.class);
 
 					Mono<DiscountRepository.Discount> discountMono =
-							this.discountRepository.getDiscount(sellerInfo.getSeller(), productId);
+							this.repository.getDiscount(sellerInfo.getSeller(), productId);
 
 					return Mono.zip(priceMono, discountMono,
 							(priceInfo, discount) -> new ProductOffer(priceInfo, discount.value));

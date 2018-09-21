@@ -15,25 +15,22 @@
  */
 package classic;
 
-import java.math.BigDecimal;
-import java.math.RoundingMode;
-
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
-import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Configuration;
+import org.springframework.context.annotation.Import;
+import org.springframework.data.jdbc.repository.config.EnableJdbcRepositories;
+import org.springframework.data.jdbc.repository.config.JdbcConfiguration;
 
 @SpringBootApplication
 public class ClassicApp {
-
 
 	public static void main(String[] args) {
 		SpringApplication.run(ClassicApp.class, args);
 	}
 
-
-	@Bean
-	public SellerRepository sellerRepository() {
-		return (seller, productId) -> new BigDecimal(5).setScale(2, RoundingMode.HALF_EVEN);
-	}
-
+	@Configuration
+	@EnableJdbcRepositories
+	@Import(JdbcConfiguration.class)
+	static class SpringDataJdbcConfiguration {}
 }

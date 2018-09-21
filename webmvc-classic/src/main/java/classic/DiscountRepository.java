@@ -15,12 +15,20 @@
  */
 package classic;
 
-
 import java.math.BigDecimal;
 
+import org.springframework.data.jdbc.repository.query.Query;
+import org.springframework.data.relational.core.mapping.Column;
+import org.springframework.data.repository.Repository;
 
-interface SellerRepository {
+interface DiscountRepository extends Repository<DiscountRepository.Discount, Long> {
 
-	BigDecimal getDiscount(String seller, Long productId);
+	@Query("SELECT * FROM discounts WHERE seller = :seller AND product = :productId")
+	Discount getDiscount(String seller, Long productId);
 
+	class Discount {
+
+		@Column("discount")
+		public BigDecimal value;
+	}
 }

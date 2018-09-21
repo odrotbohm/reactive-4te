@@ -15,7 +15,8 @@
  */
 package classic;
 
-import java.math.BigDecimal;
+import classic.DiscountRepository.Discount;
+
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -31,19 +32,17 @@ import org.springframework.web.util.DefaultUriBuilderFactory;
 @RestController
 public class PriceController {
 
+	private static final String BASE_URL = "http://localhost:8082";
 	private static final ParameterizedTypeReference<List<ProductSellerInfo>> SELLER_LIST_TYPE =
 			new ParameterizedTypeReference<List<ProductSellerInfo>>() {};
 
+	private final RestTemplate template;
+	private final DiscountRepository repository;
 
-	private final RestTemplate restTemplate;
-
-	private final SellerRepository sellerRepository;
-
-
-	public PriceController(RestTemplateBuilder builder, SellerRepository repository) {
-		String baseUrl = "http://localhost:8082";
-		this.restTemplate = builder.uriTemplateHandler(new DefaultUriBuilderFactory(baseUrl)).build();
-		this.sellerRepository = repository;
+	public PriceController(RestTemplateBuilder builder, DiscountRepository repository) {
+		
+		this.template = builder.uriTemplateHandler(new DefaultUriBuilderFactory(BASE_URL)).build();
+		this.repository = repository;
 	}
 
 
@@ -52,18 +51,16 @@ public class PriceController {
 
 		String sellersUrl = "/product/{productId}/sellers";
 
-		return this.restTemplate
+		return template
 				.exchange(sellersUrl, HttpMethod.GET, null, SELLER_LIST_TYPE, productId)
 				.getBody()
 				.stream()
-				.map(sellerInfo -> {
-					String priceUrl = sellerInfo.getUrl();
-					return this.restTemplate.getForObject(priceUrl, ProductPriceInfo.class);
-				})
+				.map(sellerInfo -> 
+					template.getForObject(sellerInfo.getUrl(), ProductPriceInfo.class))
 				.map(priceInfo -> {
 					String seller = priceInfo.getSeller();
-					BigDecimal discount = this.sellerRepository.getDiscount(seller, productId);
-					return new ProductOffer(discount, priceInfo);
+					Discount discount = repository.getDiscount(seller, productId);
+					return new ProductOffer(discount.value, priceInfo);
 				})
 				.collect(Collectors.toList());
 	}
